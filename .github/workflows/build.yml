@@ -1,4 +1,4 @@
-name: Build MagicBox Riva
+name: Build MagicBox Riva - Screen Terminal
 
 on:
   workflow_dispatch:
@@ -20,26 +20,29 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Konfigurasi Target Riva (Snapdragon 425)
+      - name: Paksa Aktifkan Tampilan Layar LCD (VT & FB Console)
         run: |
           echo "CONFIG_TARGET_armsr=y" > .config
           echo "CONFIG_TARGET_armsr_armv8=y" >> .config
           echo "CONFIG_TARGET_armsr_armv8_DEVICE_generic=y" >> .config
-          # Driver Layar & SoC Snapdragon
-          echo "CONFIG_PACKAGE_kmod-drm-msm=y" >> .config
+          
+          # SKLARKAR UTAMA TAMPILAN TEKS DI LAYAR LCD HP
+          echo "CONFIG_KERNEL_VT=y" >> .config
+          echo "CONFIG_KERNEL_VT_CONSOLE=y" >> .config
+          echo "CONFIG_KERNEL_FRAMEBUFFER_CONSOLE=y" >> .config
           echo "CONFIG_PACKAGE_kmod-fb=y" >> .config
           echo "CONFIG_PACKAGE_kmod-simplefb=y" >> .config
-          echo "CONFIG_PACKAGE_kmod-qcom-spmi=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-drm-msm=y" >> .config
+          
           make defconfig
 
-      - name: Download Package
-        run: make download -j$(nproc)
+      - name: Download & Memasak Kernel Layar
+        run: |
+          make download -j$(nproc)
+          make -j$(nproc) || make -j1 V=s
 
-      - name: Memasak Firmware
-        run: make -j$(nproc) || make -j1 V=s
-
-      - name: Upload Hasil Jadi
+      - name: Upload Hasil
         uses: actions/upload-artifact@v4
         with:
-          name: MagicBox-Riva-Firmware
+          name: MagicBox-Riva-TerminalScreen
           path: bin/targets/armsr/armv8/
