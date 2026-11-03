@@ -20,21 +20,14 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Konfigurasi Target Riva
+      - name: Konfigurasi Target Riva (Snapdragon 425)
         run: |
           echo "CONFIG_TARGET_armsr=y" > .config
           echo "CONFIG_TARGET_armsr_armv8=y" >> .config
           echo "CONFIG_TARGET_armsr_armv8_DEVICE_generic=y" >> .config
+          # Tambahan Driver Layar & SoC Snapdragon
+          echo "CONFIG_PACKAGE_kmod-drm-msm=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-fb=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-simplefb=y" >> .config
+          echo "CONFIG_PACKAGE_kmod-qcom-spmi=y" >> .config
           make defconfig
-
-      - name: Download Package
-        run: make download -j$(nproc)
-
-      - name: Memasak Firmware
-        run: make -j$(nproc) || make -j1 V=s
-
-      - name: Upload Hasil Jadi
-        uses: actions/upload-artifact@v4
-        with:
-          name: MagicBox-Riva-Firmware
-          path: bin/targets/armsr/armv8/
